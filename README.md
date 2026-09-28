@@ -33,6 +33,8 @@ it statically, work on copies, and retain an immutable preservation original.
   repairs, build behavior, and browser regression lessons.
 - `docs/COLLISION_AUDIT.md` and `docs/PROCESS_AUDIT.md` — focused review
   checklists.
+- `docs/AUTOMATION_ROADMAP.md` — a staged design for turning the conversion
+  process into a resumable `gmrecover` command-line tool.
 
 ## Recovery workflow
 
@@ -98,3 +100,7 @@ the runtime in your own build adapter and reject stale shared compiler output.
 This is an initial extraction of a working preservation workspace. The field
 notes are mature; the rule packs are being generalized. Contributions should
 include a reproducible fixture or an artifact-free regression description.
+
+## License
+
+Released under the [MIT License](LICENSE).
