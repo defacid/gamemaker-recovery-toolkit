@@ -1,6 +1,10 @@
 node_modules/
 __pycache__/
 *.py[cod]
+.venv/
+*.egg-info/
+dist/
+coverage.xml
 .DS_Store
 .idea/
 .vscode/

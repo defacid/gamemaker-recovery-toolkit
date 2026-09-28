@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Documented tools and field notes for authorized GameMaker preservation and browser conversion.",
   "scripts": {
-    "check:python": "python3 -m compileall -q scripts examples",
+    "check:python": "python3 -m compileall -q gmrecover scripts examples tests && python3 -m unittest discover -s tests -v",
     "check": "npm run check:python && node --check scripts/audit/sprite_alpha_bounds_batch.mjs"
   },
   "dependencies": {

@@ -91,6 +91,49 @@ python scripts/audit/audit_collision_masks.py \
   /path/to/conversion-workspace /path/to/rule-pack.py
 ```
 
+## `gmrecover` CLI
+
+Install the local command in an isolated environment:
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -e .
+```
+
+Run the safe end-to-end stages against an authorized artifact:
+
+```sh
+gmrecover convert path/to/game.zip --workspace work/game
+```
+
+Or run stages individually:
+
+```sh
+gmrecover inspect path/to/game.exe --workspace work/game
+gmrecover extract --workspace work/game
+gmrecover audit --workspace work/game --root work/game/modern
+gmrecover report --workspace work/game
+```
+
+`convert` never executes an input binary. Known source trees and ZIP archives
+are copied or safely extracted. Formats requiring UndertaleModTool, a Classic
+decompiler, or YYC analysis are recorded as blocked with a specific adapter
+requirement, while still producing a manifest and report.
+
+After extraction, define project-specific commands in a TOML file and run the
+remaining stages locally:
+
+```sh
+gmrecover pipeline recovery.toml --workspace work/game
+```
+
+See [`examples/pipeline.toml`](examples/pipeline.toml) for normalize, generate,
+repair, GameMaker build, Playwright exercise, and screenshot-comparison stages.
+Commands are executed directly without a shell, logged separately, recorded in
+the manifest, stopped on failure, and skipped on later runs once complete. Use
+`--force` or `--from STAGE` when deliberately rerunning work. Pipeline files
+are executable configuration and should only be used from trusted sources.
+
 GameMaker compilation is intentionally not wrapped as a universal command:
 runtime paths, licenses, user profiles, targets, and output layouts vary. Pin
 the runtime in your own build adapter and reject stale shared compiler output.

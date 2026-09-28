@@ -1,0 +1,32 @@
+[project]
+name = "example-recovery"
+target = "html5"
+
+# Commands are argv arrays and are never evaluated by a shell. Available
+# placeholders: workspace, input, extracted, normalized, modern, build,
+# reports, screenshots, and config_dir.
+
+[stages.normalize]
+command = ["python3", "{config_dir}/normalize.py", "{extracted}", "{normalized}"]
+cwd = "{workspace}"
+
+[stages.generate]
+command = ["python3", "{config_dir}/generate.py", "{normalized}", "{modern}"]
+cwd = "{workspace}"
+
+[stages.repair]
+command = ["python3", "{config_dir}/rules.py", "{modern}"]
+cwd = "{workspace}"
+
+[stages.build]
+command = ["/path/to/GameMaker/Igor", "--project={modern}/game.yyp", "--output={build}", "Run"]
+cwd = "{workspace}"
+
+[stages.exercise]
+command = ["npx", "playwright", "test", "--config={config_dir}/playwright.config.js"]
+cwd = "{workspace}"
+environment = { GMRECOVER_BUILD = "{build}", GMRECOVER_SCREENSHOTS = "{screenshots}" }
+
+[stages.compare]
+command = ["python3", "{config_dir}/compare.py", "{screenshots}", "{reports}"]
+cwd = "{workspace}"

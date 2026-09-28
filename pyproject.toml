@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmrecover"
+version = "0.1.0"
+description = "Deterministic tooling for authorized GameMaker recovery and conversion"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Defacid", email = "hello@defacid.com" }]
+dependencies = []
+
+[project.scripts]
+gmrecover = "gmrecover.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["gmrecover*"]
