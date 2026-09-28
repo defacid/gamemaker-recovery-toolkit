@@ -1,0 +1,14 @@
+{
+  "name": "gamemaker-recovery-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Documented tools and field notes for authorized GameMaker preservation and browser conversion.",
+  "scripts": {
+    "check:python": "python3 -m compileall -q scripts examples",
+    "check": "npm run check:python && node --check scripts/audit/sprite_alpha_bounds_batch.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.35.4"
+  }
+}
