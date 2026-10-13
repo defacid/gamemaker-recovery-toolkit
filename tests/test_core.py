@@ -8,6 +8,7 @@ from pathlib import Path
 from gmrecover.core import Workspace, audit_workspace, extract_artifact, inspect_artifact, render_report
 from gmrecover.pipeline import run_pipeline
 from gmrecover.sweep import discover_candidates, run_sweep
+from gmrecover.manuals import _canonical_url, import_manual, index_manual, source_catalog
 
 
 class RecoveryPipelineTests(unittest.TestCase):
@@ -97,6 +98,31 @@ class RecoveryPipelineTests(unittest.TestCase):
             self.assertEqual(result["failed_count"], 0)
             self.assertEqual(result["results"][0]["status"], "complete")
             self.assertTrue(Path(result["results"][0]["reports"][0]).is_file())
+
+    def test_manual_index_contains_facts_and_citations_without_prose(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manual = root / "manual"
+            manual.mkdir()
+            (manual / "draw_text.html").write_text(
+                "<h1>draw_text</h1><p>Copyrighted explanatory paragraph.</p>"
+                "<code>draw_text(x, y, string)</code><pre>if (ready) draw_text(0, 0, name);</pre>",
+                encoding="utf-8",
+            )
+            cache = root / "cache"
+            imported = import_manual("fixture-gm8", manual, cache)
+            self.assertEqual(imported["documents"], 1)
+            output = root / "facts.json"
+            indexed = index_manual("fixture-gm8", cache, output)
+            self.assertGreaterEqual(indexed["symbols"], 1)
+            facts = json.loads(output.read_text(encoding="utf-8"))
+            draw = next(item for item in facts["symbols"] if item["name"] == "draw_text")
+            self.assertIn("draw_text(x, y, string)", draw["signatures"])
+            self.assertTrue(draw["citations"])
+            self.assertNotIn("Copyrighted explanatory paragraph", output.read_text(encoding="utf-8"))
+            self.assertIn("current-lts", source_catalog()["official_sources"])
+            self.assertFalse(source_catalog()["historical_sources"]["gms14"]["automatic_fetch"])
+            self.assertIn("Instance%20Keywords", _canonical_url("https://example.test/Instance Keywords/self.htm#topic"))
 
 
 if __name__ == "__main__":

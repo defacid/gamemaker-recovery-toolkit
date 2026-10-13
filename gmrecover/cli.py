@@ -10,6 +10,7 @@ from pathlib import Path
 from . import __version__
 from .core import Workspace, audit_workspace, extract_artifact, inspect_artifact, render_report
 from .pipeline import PIPELINE_STAGES, run_pipeline
+from .manuals import fetch_manual, import_manual, index_manual, source_catalog
 from .sweep import run_sweep, stderr_progress
 
 
@@ -56,6 +57,23 @@ def build_parser() -> argparse.ArgumentParser:
     sweep.add_argument("--workspace-root", type=Path, required=True, help="Parent directory for isolated candidate workspaces.")
     sweep.add_argument("--list", action="store_true", help="List candidates without processing them.")
     sweep.add_argument("--continue-on-error", action="store_true", help="Continue after a candidate fails.")
+
+    manuals = commands.add_parser("manuals", help="Fetch or index versioned GameMaker manual evidence.")
+    manual_commands = manuals.add_subparsers(dest="manual_command", required=True)
+    manual_commands.add_parser("sources", help="List registered official manual sources.")
+    manual_fetch = manual_commands.add_parser("fetch", help="Cache a registered public manual locally.")
+    manual_fetch.add_argument("release")
+    manual_fetch.add_argument("--cache", type=Path, required=True)
+    manual_fetch.add_argument("--max-pages", type=int, default=5000)
+    manual_fetch.add_argument("--delay", type=float, default=0.1)
+    manual_import = manual_commands.add_parser("import", help="Cache an authorized local HTML/text manual.")
+    manual_import.add_argument("release")
+    manual_import.add_argument("source", type=Path)
+    manual_import.add_argument("--cache", type=Path, required=True)
+    manual_index = manual_commands.add_parser("index", help="Create a prose-free symbol/grammar facts index.")
+    manual_index.add_argument("release")
+    manual_index.add_argument("--cache", type=Path, required=True)
+    manual_index.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -63,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     workspace = None
-    if args.command != "sweep":
+    if args.command not in {"sweep", "manuals"}:
         workspace = workspace_for(args)
         workspace.ensure()
     try:
@@ -93,6 +111,16 @@ def main(argv: list[str] | None = None) -> int:
             )
             emit(result)
             return 1 if result.get("failed_count", 0) else (2 if result.get("blocked_count", 0) else 0)
+        elif args.command == "manuals":
+            if args.manual_command == "sources":
+                emit(source_catalog())
+            elif args.manual_command == "fetch":
+                emit(fetch_manual(args.release, args.cache, max_pages=args.max_pages, delay=args.delay,
+                                  progress=lambda value: print(value, file=sys.stderr, flush=True)))
+            elif args.manual_command == "import":
+                emit(import_manual(args.release, args.source, args.cache))
+            elif args.manual_command == "index":
+                emit(index_manual(args.release, args.cache, args.output))
     except (FileNotFoundError, RuntimeError, ValueError) as error:
         print(f"gmrecover: {error}", file=sys.stderr)
         return 1

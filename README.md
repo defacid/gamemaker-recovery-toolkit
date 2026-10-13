@@ -158,6 +158,34 @@ pack selected by evidence from that project. Core discovery, hashing, safe
 extraction, intermediate validation, progress reporting, and fidelity audits
 must remain format-driven and reusable by projects the toolkit has never seen.
 
+## Versioned manual evidence
+
+List the registered official public sources, cache one locally, and generate a
+derived facts index:
+
+```sh
+gmrecover manuals sources
+gmrecover manuals fetch current-lts --cache manual-cache
+gmrecover manuals index current-lts --cache manual-cache \
+  --output work/manual-index/current-lts.json
+```
+
+For an authorized historical manual already on disk:
+
+```sh
+gmrecover manuals import gm81 /path/to/unpacked-html-manual --cache manual-cache
+gmrecover manuals index gm81 --cache manual-cache \
+  --output work/manual-index/gm81.json
+```
+
+Raw pages remain in the ignored local cache. The derived JSON contains symbols,
+signatures, keywords, categories, document checksums, and citations, but no
+manual prose. PDF and CHM files require a separate local text-extraction adapter
+before import; the command reports that boundary rather than guessing.
+
+See [`docs/MANUAL_INDEX.md`](docs/MANUAL_INDEX.md) for the provenance and
+versioning contract.
+
 ## Status
 
 This is an initial extraction of a working preservation workspace. The field
