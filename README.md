@@ -106,6 +106,21 @@ Run the safe end-to-end stages against an authorized artifact:
 gmrecover convert path/to/game.zip --workspace work/game
 ```
 
+Scan a collection and run the safe passes for every format-recognized candidate:
+
+```sh
+gmrecover sweep path/to/archive --workspace-root work/sweep --list
+gmrecover sweep path/to/archive --workspace-root work/sweep --continue-on-error
+```
+
+Discovery is based on GameMaker formats and project structure, never a list of
+known game names. Each candidate gets an isolated, deterministically named
+workspace. Progress is written to stderr with completed/remaining stage counts,
+elapsed time, and a rolling ETA; the machine-readable summary remains on
+stdout. Inputs that need an unavailable Classic, UTMT, YYC, build, or browser
+adapter are reported as blocked with the required adapter instead of being
+silently skipped or treated as successfully converted.
+
 Or run stages individually:
 
 ```sh
@@ -115,7 +130,7 @@ gmrecover audit --workspace work/game --root work/game/modern
 gmrecover report --workspace work/game
 ```
 
-`convert` never executes an input binary. Known source trees and ZIP archives
+`convert` and `sweep` never execute an input binary. Known source trees and ZIP archives
 are copied or safely extracted. Formats requiring UndertaleModTool, a Classic
 decompiler, or YYC analysis are recorded as blocked with a specific adapter
 requirement, while still producing a manifest and report.
@@ -137,6 +152,11 @@ are executable configuration and should only be used from trusted sources.
 GameMaker compilation is intentionally not wrapped as a universal command:
 runtime paths, licenses, user profiles, targets, and output layouts vary. Pin
 the runtime in your own build adapter and reject stale shared compiler output.
+
+Game-specific compatibility knowledge belongs in an optional versioned rule
+pack selected by evidence from that project. Core discovery, hashing, safe
+extraction, intermediate validation, progress reporting, and fidelity audits
+must remain format-driven and reusable by projects the toolkit has never seen.
 
 ## Status
 

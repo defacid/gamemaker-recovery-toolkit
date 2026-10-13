@@ -60,6 +60,16 @@ The tool should stop with a precise diagnostic at those boundaries. Once a new
 repair is understood, it becomes a fixture and rule so subsequent projects do
 not require another manual investigation.
 
+## Generality boundary
+
+Core behavior must never select conversion logic by a creator's game title,
+private directory layout, or a hardcoded catalog. Detect source families from
+signatures, descriptors, and resource structure. Put unavoidable project
+exceptions in explicit rule packs whose applicability is declared and whose
+effects are logged. A new user's previously unseen game must receive the same
+inspection, hashing, extraction, progress, audit, and blocker reporting as a
+maintainer fixture.
+
 ## Recommended implementation
 
 Use a Python CLI for orchestration because the existing conversion and audit

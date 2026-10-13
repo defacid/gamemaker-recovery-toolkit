@@ -7,6 +7,7 @@ from pathlib import Path
 
 from gmrecover.core import Workspace, audit_workspace, extract_artifact, inspect_artifact, render_report
 from gmrecover.pipeline import run_pipeline
+from gmrecover.sweep import discover_candidates, run_sweep
 
 
 class RecoveryPipelineTests(unittest.TestCase):
@@ -72,6 +73,30 @@ class RecoveryPipelineTests(unittest.TestCase):
             self.assertTrue((workspace.root / "normalized" / "done").is_file())
             second = run_pipeline(workspace, config)
             self.assertTrue(second["normalize"]["resumed"])
+
+    def test_sweep_discovers_by_format_and_ignores_unrelated_archives(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "game.gmk").write_bytes(b"source")
+            with zipfile.ZipFile(root / "game.zip", "w") as archive:
+                archive.writestr("project/game.yyp", "{}")
+            with zipfile.ZipFile(root / "photos.zip", "w") as archive:
+                archive.writestr("photo.jpg", b"jpeg")
+            candidates = discover_candidates(root)
+            self.assertEqual([item.path.name for item in candidates], ["game.gmk", "game.zip"])
+
+    def test_sweep_runs_safe_passes_and_reports_blockers(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            (source / "game.yyp").write_text("{}", encoding="utf-8")
+            (source / "player.gml").write_text("draw_text(x, y, 'hello');", encoding="utf-8")
+            result = run_sweep(source, root / "workspaces")
+            self.assertEqual(result["candidate_count"], 1)
+            self.assertEqual(result["failed_count"], 0)
+            self.assertEqual(result["results"][0]["status"], "complete")
+            self.assertTrue(Path(result["results"][0]["reports"][0]).is_file())
 
 
 if __name__ == "__main__":

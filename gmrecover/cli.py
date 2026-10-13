@@ -10,6 +10,7 @@ from pathlib import Path
 from . import __version__
 from .core import Workspace, audit_workspace, extract_artifact, inspect_artifact, render_report
 from .pipeline import PIPELINE_STAGES, run_pipeline
+from .sweep import run_sweep, stderr_progress
 
 
 def emit(value: object) -> None:
@@ -49,14 +50,22 @@ def build_parser() -> argparse.ArgumentParser:
     convert = commands.add_parser("convert", help="Run safe available stages and report adapter blockers.")
     convert.add_argument("input", type=Path)
     convert.add_argument("--workspace", type=Path, required=True)
+
+    sweep = commands.add_parser("sweep", help="Discover GameMaker artifacts by format and run safe recovery passes.")
+    sweep.add_argument("root", type=Path, help="Artifact or directory tree to scan.")
+    sweep.add_argument("--workspace-root", type=Path, required=True, help="Parent directory for isolated candidate workspaces.")
+    sweep.add_argument("--list", action="store_true", help="List candidates without processing them.")
+    sweep.add_argument("--continue-on-error", action="store_true", help="Continue after a candidate fails.")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    workspace = workspace_for(args)
-    workspace.ensure()
+    workspace = None
+    if args.command != "sweep":
+        workspace = workspace_for(args)
+        workspace.ensure()
     try:
         if args.command == "inspect":
             emit(inspect_artifact(args.input, workspace))
@@ -77,6 +86,13 @@ def main(argv: list[str] | None = None) -> int:
             markdown, html = render_report(workspace)
             emit({"inspect": inspection, "extract": extraction, "reports": [str(markdown), str(html)]})
             return 2 if extraction.get("adapter") is None else 0
+        elif args.command == "sweep":
+            result = run_sweep(
+                args.root, args.workspace_root, list_only=args.list,
+                continue_on_error=args.continue_on_error, progress=stderr_progress,
+            )
+            emit(result)
+            return 1 if result.get("failed_count", 0) else (2 if result.get("blocked_count", 0) else 0)
     except (FileNotFoundError, RuntimeError, ValueError) as error:
         print(f"gmrecover: {error}", file=sys.stderr)
         return 1
